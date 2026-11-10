@@ -1,17 +1,17 @@
 {
-  "name": "Danh sách mừng cưới",
+  "name": "Mừng Cưới Minh Đức - Thanh Hằng",
   "short_name": "Mừng Cưới",
   "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#f7f4ef",
   "theme_color": "#f7f4ef",
-  "lang": "vi",
   "icons": [
     {
-      "src": "icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "src": "./icon.png?v=3",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
     }
   ]
 }
