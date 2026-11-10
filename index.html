@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f7f4ef">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Mừng Cưới">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon.svg">
+<title>Mừng Cưới</title>
+<style>
+:root{--bg:#f7f4ef;--card:#fff;--ink:#25231f;--muted:#77736c;--line:#e9e4dc;--accent:#6e5745;--green:#24744d;--red:#b3483f}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding:env(safe-area-inset-top) 14px calc(24px + env(safe-area-inset-bottom))}
+main{max-width:720px;margin:0 auto;padding-top:18px}.top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}
+h1{font-size:25px;margin:0;font-weight:750;letter-spacing:-.5px}.sub{font-size:12px;color:var(--muted);margin-top:4px}
+button,.filebtn{border:0;border-radius:12px;padding:11px 13px;background:var(--accent);color:white;font-weight:650;font-size:14px;cursor:pointer}
+button.secondary,.filebtn.secondary{background:#eee9e1;color:#433b33}button.danger{background:#f8e8e6;color:var(--red)}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:13px}.stat{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px}.stat small{display:block;color:var(--muted);font-size:12px;margin-bottom:5px}.stat strong{font-size:21px}
+.search{width:100%;border:1px solid var(--line);background:white;border-radius:14px;padding:15px 14px;font-size:16px;outline:none;margin:2px 0 10px}.search:focus,input:focus{border-color:#9a8068}
+.tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}.tools select{border:1px solid var(--line);border-radius:11px;padding:10px;background:white;color:var(--ink);font-size:13px}
+.listhead{display:flex;justify-content:space-between;align-items:center;margin:14px 2px 8px}.listhead b{font-size:15px}.muted{font-size:12px;color:var(--muted)}
+.person{background:white;border:1px solid var(--line);border-radius:14px;padding:13px;margin-bottom:8px;display:flex;align-items:center;gap:10px}
+.person .info{min-width:0;flex:1}.person .name{font-weight:700;font-size:15px;overflow-wrap:anywhere}.person .note{font-size:12px;color:var(--muted);margin-top:3px}.amount{font-weight:700;color:var(--green);font-size:14px;white-space:nowrap}.rowactions{display:flex;gap:5px}.rowactions button{padding:8px 9px;font-size:12px}
+.empty{text-align:center;color:var(--muted);padding:30px 12px;background:white;border-radius:14px}
+dialog{border:0;border-radius:18px;padding:0;width:min(94vw,460px);box-shadow:0 15px 60px #0003}dialog::backdrop{background:#16120e77}.modal{padding:20px}.modal h2{margin:0 0 14px;font-size:20px}.field{display:block;margin:12px 0}.field span{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}.field input{width:100%;border:1px solid var(--line);border-radius:11px;padding:12px;font-size:16px}.modalactions{display:flex;gap:8px;margin-top:18px}.modalactions button{flex:1}
+footer{color:var(--muted);font-size:11px;text-align:center;padding:18px 4px;line-height:1.5}
+#fileInput{display:none}.notice{font-size:12px;color:var(--muted);margin:8px 2px}
+@media(min-width:600px){.person{padding:15px}.rowactions button{padding:9px 12px}}
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <div><h1>Danh sách mừng cưới</h1><div class="sub">Dữ liệu riêng trên thiết bị của anh</div></div>
+    <button id="addBtn">＋ Thêm</button>
+  </header>
+  <section class="stats">
+    <div class="stat"><small>Số người có tên</small><strong id="count">—</strong></div>
+    <div class="stat"><small>Tổng tiền mặt</small><strong id="totalCash">—</strong></div>
+    <div class="stat"><small>Tổng vàng</small><strong id="totalGold">—</strong></div>
+  </section>
+  <input id="search" class="search" type="search" placeholder="⌕  Tìm tên hoặc ghi chú..." autocomplete="off">
+  <div class="tools">
+    <select id="sortMode" aria-label="Cách sắp xếp">
+      <option value="given">Sắp xếp theo tên gọi A–Z</option>
+      <option value="full">Sắp xếp cả họ tên A–Z</option>
+      <option value="original">Thứ tự file Excel</option>
+    </select>
+    <button class="secondary" id="exportBtn">Xuất CSV</button>
+    <button class="secondary" id="backupBtn">Sao lưu JSON</button>
+  </div>
+  <div class="tools">
+    <label class="filebtn secondary" for="fileInput">Nhập CSV/JSON</label>
+    <input id="fileInput" type="file" accept=".csv,.json">
+    <span class="muted">Xuất Excel thành CSV trước khi nhập</span>
+  </div>
+  <div class="listhead"><b>Danh sách</b><span class="muted" id="shown">—</span></div>
+  <section id="people"></section>
+  <footer>Ứng dụng lưu dữ liệu trên trình duyệt của iPhone. Hãy dùng “Sao lưu JSON” định kỳ để tránh mất dữ liệu khi đổi máy hoặc xóa dữ liệu Safari.</footer>
+</main>
+
+<dialog id="editDialog">
+  <form class="modal" id="editForm">
+    <h2 id="dialogTitle">Thêm người mừng</h2>
+    <label class="field"><span>Họ tên</span><input id="nameInput" required maxlength="120" placeholder="Nhập tên"></label>
+    <label class="field"><span>Ghi chú</span><input id="noteInput" maxlength="160" placeholder="Ví dụ: bạn học, đồng nghiệp..."></label>
+    <label class="field"><span>Tiền mừng (giữ nguyên cách ghi)</span><input id="amountInput" maxlength="40" placeholder="Ví dụ: 500k, 1tr, 1 chỉ"></label>
+    <div class="modalactions"><button type="button" class="secondary" id="cancelBtn">Hủy</button><button type="submit">Lưu</button></div>
+  </form>
+</dialog>
+
+<script>
+const INITIAL_DATA = [];
+const STORAGE_KEY = "mung-cuoi-data-v2";
+let people = [];
+let editingId = null;
+const collator = new Intl.Collator("vi", {sensitivity:"base",numeric:true});
+const $ = id => document.getElementById(id);
+
+function loadData(){
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    people = saved ? JSON.parse(saved) : INITIAL_DATA.map((p,i)=>({...p,id:i+1}));
+  } catch(e) { people = INITIAL_DATA.map((p,i)=>({...p,id:i+1})); }
+  saveData();
+}
+function saveData(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(people)); }
+function norm(s){ return String(s||"").normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").replace(/đ/g,"d").replace(/Đ/g,"D").toLocaleLowerCase("vi").trim(); }
+function givenName(s){ const parts=String(s||"").trim().split(/\\s+/); return parts[parts.length-1]||""; }
+function sortPeople(arr){
+  const mode=$("sortMode").value, copy=[...arr];
+  if(mode==="given") copy.sort((a,b)=>collator.compare(givenName(a.name),givenName(b.name))||collator.compare(a.name,b.name)||a.id-b.id);
+  else if(mode==="full") copy.sort((a,b)=>collator.compare(a.name,b.name)||a.id-b.id);
+  else copy.sort((a,b)=>a.id-b.id);
+  return copy;
+}
+function parseVnd(s){
+  const x=String(s||"").toLowerCase().replace(/\\s/g,"");
+  let m=x.match(/^([0-9]+(?:[.,][0-9]+)?)tr$/); if(m)return Number(m[1].replace(",","."))*1000000;
+  m=x.match(/^([0-9]+(?:[.,][0-9]+)?)k$/); if(m)return Number(m[1].replace(",","."))*1000;
+  if(/^\\d+$/.test(x)) return Number(x);
+  return null;
+}
+function money(n){return Math.round(n).toLocaleString("vi-VN")+"đ";}
+function render(){
+  const query=norm($("search").value);
+  const named=people.filter(p=>p.name.trim());
+  const filtered=sortPeople(named.filter(p=>norm(p.name+" "+p.note+" "+p.amount).includes(query)));
+  $("count").textContent=named.length.toLocaleString("vi-VN");
+  const amounts=named.map(p=>parseAmount(p.amount)).filter(Boolean);
+  const cash=amounts.filter(a=>a.kind==="cash").reduce((sum,a)=>sum+a.value,0);
+  const gold=amounts.filter(a=>a.kind==="gold").reduce((sum,a)=>sum+a.value,0);
+  $("totalCash").textContent=money(cash);
+  $("totalGold").textContent=goldLabel(gold);
+  $("shown").textContent=filtered.length+" kết quả";
+  const host=$("people"); host.innerHTML="";
+  if(!filtered.length){host.innerHTML='<div class="empty">Không tìm thấy tên phù hợp.</div>';return;}
+  for(const p of filtered){
+    const el=document.createElement("article"); el.className="person";
+    const info=document.createElement("div"); info.className="info";
+    const nm=document.createElement("div"); nm.className="name"; nm.textContent=p.name;
+    info.appendChild(nm);
+    if(p.note){const nt=document.createElement("div");nt.className="note";nt.textContent=p.note;info.appendChild(nt);}
+    const amt=document.createElement("div");amt.className="amount";amt.textContent=p.amount||"Chưa ghi";
+    const actions=document.createElement("div");actions.className="rowactions";
+    const edit=document.createElement("button");edit.className="secondary";edit.textContent="Sửa";edit.onclick=()=>openEdit(p.id);
+    const del=document.createElement("button");del.className="danger";del.textContent="Xóa";del.onclick=()=>removePerson(p.id);
+    actions.append(edit,del);el.append(info,amt,actions);host.appendChild(el);
+  }
+}
+function openEdit(id=null){
+  editingId=id;
+  const p=people.find(x=>x.id===id);
+  $("dialogTitle").textContent=p?"Sửa thông tin":"Thêm người mừng";
+  $("nameInput").value=p?.name||"";$("noteInput").value=p?.note||"";$("amountInput").value=p?.amount||"";
+  $("editDialog").showModal();$("nameInput").focus();
+}
+function removePerson(id){
+  const p=people.find(x=>x.id===id);
+  if(!confirm(`Xóa "${p?.name||"dòng này"}" khỏi danh sách?`))return;
+  people=people.filter(x=>x.id!==id);saveData();render();
+}
+$("editForm").addEventListener("submit",e=>{
+  e.preventDefault();
+  const value={name:$("nameInput").value.trim(),note:$("noteInput").value.trim(),amount:$("amountInput").value.trim()};
+  if(!value.name)return;
+  if(editingId!==null){const i=people.findIndex(p=>p.id===editingId);if(i>=0)people[i]={...people[i],...value};}
+  else people.push({...value,id:Date.now()+Math.random()});
+  saveData();$("editDialog").close();render();
+});
+$("addBtn").onclick=()=>openEdit();$("cancelBtn").onclick=()=>$("editDialog").close();
+$("search").addEventListener("input",render);$("sortMode").addEventListener("change",render);
+function download(filename,content,type){
+  const blob=new Blob([content],{type});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=filename;a.click();URL.revokeObjectURL(url);
+}
+$("backupBtn").onclick=()=>download("sao-luu-mung-cuoi.json",JSON.stringify(people,null,2),"application/json");
+$("exportBtn").onclick=()=>{
+  const rows=[["Tên","Note","Tiền"],...sortPeople(people).map(p=>[p.name,p.note,p.amount])];
+  const csv="\\uFEFF"+rows.map(r=>r.map(v=>'"'+String(v??"").replace(/"/g,'""')+'"').join(",")).join("\\r\\n");
+  download("danh-sach-mung-cuoi.csv",csv,"text/csv;charset=utf-8");
+};
+$("fileInput").addEventListener("change",async e=>{
+  const file=e.target.files[0];if(!file)return;
+  try{
+    if(file.name.toLowerCase().endsWith(".json")){
+      const data=JSON.parse(await file.text());if(!Array.isArray(data))throw Error("JSON không đúng định dạng");
+      const additions=data.map(p=>({name:String(p.name||p["Tên"]||"").trim(),note:String(p.note||p["note"]||"").trim(),amount:String(p.amount||p["Tiền"]||"").trim(),id:Date.now()+Math.random()}));
+      people.push(...additions);
+    } else if(file.name.toLowerCase().endsWith(".csv")){
+      const lines=(await file.text()).replace(/^\\uFEFF/,"").split(/\\r?\\n/).filter(Boolean);
+      const parseLine=line=>{const out=[];let cur="",q=false;for(let i=0;i<line.length;i++){const c=line[i];if(c==='"'&&line[i+1]==='"'){cur+='"';i++;}else if(c==='"')q=!q;else if(c===","&&!q){out.push(cur);cur="";}else cur+=c;}out.push(cur);return out;};
+      const data=lines.slice(1).map(parseLine);
+      people.push(...data.map(r=>({name:r[0]||"",note:r[1]||"",amount:r[2]||"",id:Date.now()+Math.random()})));
+    } else { alert("Trình duyệt iPhone không đọc trực tiếp .xlsx trong bản này. Anh hãy xuất Excel thành CSV rồi nhập lại."); return; }
+    saveData();render();alert("Đã nhập dữ liệu vào danh sách.");
+  }catch(err){alert("Không thể nhập file: "+err.message);}
+  e.target.value="";
+});
+loadData();render();
+if("serviceWorker" in navigator && location.protocol.startsWith("http")) navigator.serviceWorker.register("./sw.js").catch(()=>{});
+</script>
+</body>
+</html>
